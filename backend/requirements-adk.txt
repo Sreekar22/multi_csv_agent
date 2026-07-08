@@ -1,0 +1,6 @@
+# Optional ADK runtime dependencies.
+# Install in a dedicated interpreter/env to avoid changing base FastAPI stack pins.
+# Example: pip install -r requirements.txt -r requirements-adk.txt
+
+google-adk==2.3.0
+google-genai==2.10.0
