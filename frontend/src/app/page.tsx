@@ -306,6 +306,7 @@ export default function Home() {
   const [cleanBeforeUpload, setCleanBeforeUpload] = useState<boolean>(true);
   const fileInputRef = useRef<HTMLInputElement | null>(null);
   const videoInputRef = useRef<HTMLInputElement | null>(null);
+  const demoVideoUrlRef = useRef<string | null>(null);
   const currentDateLabel = useMemo(
     () =>
       new Intl.DateTimeFormat("en-US", {
@@ -317,12 +318,14 @@ export default function Home() {
   );
 
   useEffect(() => {
-    return () => {
-      if (demoVideo?.url) {
-        URL.revokeObjectURL(demoVideo.url);
-      }
-    };
+    demoVideoUrlRef.current = demoVideo?.url ?? null;
   }, [demoVideo]);
+
+  useEffect(() => () => {
+    if (demoVideoUrlRef.current) {
+      URL.revokeObjectURL(demoVideoUrlRef.current);
+    }
+  }, []);
 
   async function ensureSession(): Promise<string> {
     if (sessionId) {
@@ -615,7 +618,7 @@ export default function Home() {
                   className="demo-video-player"
                   controls
                   preload="metadata"
-                  src={demoVideo.url}
+                  src={demoVideo.url.startsWith("blob:") ? demoVideo.url : undefined}
                 />
               </section>
             )}
@@ -877,6 +880,7 @@ export default function Home() {
                   type="button"
                   className="footer-icon-btn"
                   onClick={() => videoInputRef.current?.click()}
+                  aria-label="Add demo video"
                   title="Add demo video"
                 >
                   <svg viewBox="0 0 24 24" width="16" height="16" aria-hidden="true" focusable="false">
