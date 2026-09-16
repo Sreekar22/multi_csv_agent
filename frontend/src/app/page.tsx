@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo, useRef, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import ReactMarkdown from "react-markdown";
 import remarkGfm from "remark-gfm";
 
@@ -18,6 +18,12 @@ type ChatStatus = "idle" | "sending" | "error";
 type UploadedFileChip = {
   name: string;
   sizeLabel: string;
+};
+
+type DemoVideo = {
+  name: string;
+  sizeLabel: string;
+  url: string;
 };
 
 type CleaningReport = {
@@ -296,8 +302,10 @@ export default function Home() {
   const [pendingMessage, setPendingMessage] = useState<string>("");
   const [uploadedFiles, setUploadedFiles] = useState<UploadedFileChip[]>([]);
   const [uploadReports, setUploadReports] = useState<CleaningReport[]>([]);
+  const [demoVideo, setDemoVideo] = useState<DemoVideo | null>(null);
   const [cleanBeforeUpload, setCleanBeforeUpload] = useState<boolean>(true);
   const fileInputRef = useRef<HTMLInputElement | null>(null);
+  const videoInputRef = useRef<HTMLInputElement | null>(null);
   const currentDateLabel = useMemo(
     () =>
       new Intl.DateTimeFormat("en-US", {
@@ -307,6 +315,14 @@ export default function Home() {
       }).format(new Date()),
     [],
   );
+
+  useEffect(() => {
+    return () => {
+      if (demoVideo?.url) {
+        URL.revokeObjectURL(demoVideo.url);
+      }
+    };
+  }, [demoVideo]);
 
   async function ensureSession(): Promise<string> {
     if (sessionId) {
@@ -415,6 +431,12 @@ export default function Home() {
     setUploadMessage("");
     setUploadedFiles([]);
     setUploadReports([]);
+    setDemoVideo((currentVideo) => {
+      if (currentVideo?.url) {
+        URL.revokeObjectURL(currentVideo.url);
+      }
+      return null;
+    });
 
     try {
       const session = await createSession();
@@ -436,6 +458,35 @@ export default function Home() {
     event.currentTarget.value = "";
   }
 
+  function handleVideoPickerChange(event: React.ChangeEvent<HTMLInputElement>): void {
+    const selectedVideo = event.target.files?.[0];
+    if (!selectedVideo) {
+      return;
+    }
+
+    const nextVideoUrl = URL.createObjectURL(selectedVideo);
+    setDemoVideo((currentVideo) => {
+      if (currentVideo?.url) {
+        URL.revokeObjectURL(currentVideo.url);
+      }
+      return {
+        name: selectedVideo.name,
+        sizeLabel: formatFileSize(selectedVideo.size),
+        url: nextVideoUrl,
+      };
+    });
+    event.currentTarget.value = "";
+  }
+
+  function handleClearDemoVideo(): void {
+    setDemoVideo((currentVideo) => {
+      if (currentVideo?.url) {
+        URL.revokeObjectURL(currentVideo.url);
+      }
+      return null;
+    });
+  }
+
   return (
     <main className="chatbot-blank-canvas">
       <input
@@ -445,6 +496,13 @@ export default function Home() {
         multiple
         className="hidden-file-input"
         onChange={handleFilePickerChange}
+      />
+      <input
+        ref={videoInputRef}
+        type="file"
+        accept="video/*"
+        className="hidden-file-input"
+        onChange={handleVideoPickerChange}
       />
 
       <button
@@ -537,6 +595,30 @@ export default function Home() {
             <div className="chat-date-divider" aria-label="Conversation date">
               TODAY · {currentDateLabel}
             </div>
+
+            {demoVideo && (
+              <section className="demo-video-card" aria-label="Working demo video">
+                <div className="demo-video-header">
+                  <div>
+                    <strong>Working demo video</strong>
+                    <p>{demoVideo.name} · {demoVideo.sizeLabel}</p>
+                  </div>
+                  <button
+                    type="button"
+                    className="demo-video-clear-btn"
+                    onClick={handleClearDemoVideo}
+                  >
+                    Remove
+                  </button>
+                </div>
+                <video
+                  className="demo-video-player"
+                  controls
+                  preload="metadata"
+                  src={demoVideo.url}
+                />
+              </section>
+            )}
 
             {uploadedFiles.length > 0 && (
               <section className="uploaded-files-strip" aria-label="Uploaded files">
@@ -790,6 +872,17 @@ export default function Home() {
                   />
                   <span>Clean CSV</span>
                 </label>
+
+                <button
+                  type="button"
+                  className="footer-icon-btn"
+                  onClick={() => videoInputRef.current?.click()}
+                  title="Add demo video"
+                >
+                  <svg viewBox="0 0 24 24" width="16" height="16" aria-hidden="true" focusable="false">
+                    <path d="M4 6.5C4 5.67 4.67 5 5.5 5H14.5C15.33 5 16 5.67 16 6.5V9.5L20 7V17L16 14.5V17.5C16 18.33 15.33 19 14.5 19H5.5C4.67 19 4 18.33 4 17.5V6.5Z" fill="currentColor" />
+                  </svg>
+                </button>
 
                 <button
                   type="button"
