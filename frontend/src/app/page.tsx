@@ -505,6 +505,7 @@ export default function Home() {
         type="file"
         accept="video/*"
         className="hidden-file-input"
+        aria-label="Select demo video"
         onChange={handleVideoPickerChange}
       />
 
@@ -618,7 +619,8 @@ export default function Home() {
                   className="demo-video-player"
                   controls
                   preload="metadata"
-                  src={demoVideo.url.startsWith("blob:") ? demoVideo.url : undefined}
+                  aria-label="Working demo video preview"
+                  src={demoVideo.url.startsWith("blob:") ? encodeURI(demoVideo.url) : undefined}
                 />
               </section>
             )}
