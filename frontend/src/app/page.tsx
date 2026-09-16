@@ -468,6 +468,11 @@ export default function Home() {
     }
 
     const nextVideoUrl = URL.createObjectURL(selectedVideo);
+    if (!nextVideoUrl.startsWith("blob:")) {
+      URL.revokeObjectURL(nextVideoUrl);
+      event.currentTarget.value = "";
+      return;
+    }
     setDemoVideo((currentVideo) => {
       if (currentVideo?.url) {
         URL.revokeObjectURL(currentVideo.url);
@@ -505,7 +510,7 @@ export default function Home() {
         type="file"
         accept="video/*"
         className="hidden-file-input"
-        aria-label="Select demo video"
+        aria-hidden="true"
         onChange={handleVideoPickerChange}
       />
 
@@ -620,7 +625,7 @@ export default function Home() {
                   controls
                   preload="metadata"
                   aria-label="Working demo video preview"
-                  src={demoVideo.url.startsWith("blob:") ? encodeURI(demoVideo.url) : undefined}
+                  src={demoVideo.url}
                 />
               </section>
             )}
