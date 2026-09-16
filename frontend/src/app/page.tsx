@@ -485,7 +485,7 @@ export default function Home() {
         name: selectedVideo.name,
         sizeLabel: formatFileSize(selectedVideo.size),
         url: nextVideoUrl,
-        previewUrl: encodeURI(nextVideoUrl),
+        previewUrl: nextVideoUrl,
       };
     });
     event.currentTarget.value = "";
