@@ -24,6 +24,7 @@ type DemoVideo = {
   name: string;
   sizeLabel: string;
   url: string;
+  previewUrl: string;
 };
 
 type CleaningReport = {
@@ -434,6 +435,9 @@ export default function Home() {
     setUploadMessage("");
     setUploadedFiles([]);
     setUploadReports([]);
+    if (videoInputRef.current) {
+      videoInputRef.current.value = "";
+    }
     setDemoVideo((currentVideo) => {
       if (currentVideo?.url) {
         URL.revokeObjectURL(currentVideo.url);
@@ -467,12 +471,12 @@ export default function Home() {
       return;
     }
 
-    const nextVideoUrl = URL.createObjectURL(selectedVideo);
-    if (!nextVideoUrl.startsWith("blob:")) {
-      URL.revokeObjectURL(nextVideoUrl);
+    if (!selectedVideo.type.startsWith("video/")) {
       event.currentTarget.value = "";
       return;
     }
+
+    const nextVideoUrl = URL.createObjectURL(selectedVideo);
     setDemoVideo((currentVideo) => {
       if (currentVideo?.url) {
         URL.revokeObjectURL(currentVideo.url);
@@ -481,12 +485,16 @@ export default function Home() {
         name: selectedVideo.name,
         sizeLabel: formatFileSize(selectedVideo.size),
         url: nextVideoUrl,
+        previewUrl: encodeURI(nextVideoUrl),
       };
     });
     event.currentTarget.value = "";
   }
 
   function handleClearDemoVideo(): void {
+    if (videoInputRef.current) {
+      videoInputRef.current.value = "";
+    }
     setDemoVideo((currentVideo) => {
       if (currentVideo?.url) {
         URL.revokeObjectURL(currentVideo.url);
@@ -511,6 +519,7 @@ export default function Home() {
         accept="video/*"
         className="hidden-file-input"
         aria-hidden="true"
+        tabIndex={-1}
         onChange={handleVideoPickerChange}
       />
 
@@ -625,7 +634,7 @@ export default function Home() {
                   controls
                   preload="metadata"
                   aria-label="Working demo video preview"
-                  src={demoVideo.url}
+                  src={demoVideo.previewUrl}
                 />
               </section>
             )}
